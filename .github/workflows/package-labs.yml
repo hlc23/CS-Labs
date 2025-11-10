@@ -21,8 +21,15 @@ jobs:
       run: |
         # Get list of changed directories (only package labs that have changes)
         if [ "${{ github.event_name }}" = "push" ]; then
-          # For push events, get changed directories from the commit
-          CHANGED_DIRS=$(git diff --name-only HEAD~1 | xargs -n1 dirname | sort | uniq | grep -v "^\.$" | grep -v "^\.\." | grep -v "^build$" | grep -v "^\.github$")
+          # Check if we have at least 2 commits (HEAD~1 exists)
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            # For push events with previous commits, get changed directories from the commit
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 | xargs -n1 dirname | sort | uniq | grep -v "^\.$" | grep -v "^\.\." | grep -v "^build$" | grep -v "^\.github$")
+          else
+            # First commit or shallow clone, package all labs
+            echo "No previous commit found, packaging all labs..."
+            CHANGED_DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github" | xargs -n1 basename)
+          fi
         else
           # For manual triggers, package all labs
           CHANGED_DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github" | xargs -n1 basename)
