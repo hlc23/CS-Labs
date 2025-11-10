@@ -19,17 +19,36 @@ jobs:
 
     - name: Package all labs
       run: |
-        # Find all directories except build and .github, then zip each one
-        for dir in $(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github"); do
-          dirname=$(basename "$dir")
-          echo "Zipping $dirname..."
-          cd "$dir"
-          zip -r "../build/${dirname}.zip" .
-          cd ..
+        # Get list of changed directories (only package labs that have changes)
+        if [ "${{ github.event_name }}" = "push" ]; then
+          # For push events, get changed directories from the commit
+          CHANGED_DIRS=$(git diff --name-only HEAD~1 | xargs -n1 dirname | sort | uniq | grep -v "^\.$" | grep -v "^\.\." | grep -v "^build$" | grep -v "^\.github$")
+        else
+          # For manual triggers, package all labs
+          CHANGED_DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github" | xargs -n1 basename)
+        fi
+        
+        echo "Changed directories to package: $CHANGED_DIRS"
+        
+        for dirname in $CHANGED_DIRS; do
+          if [ -d "$dirname" ]; then
+            echo "Zipping $dirname..."
+            cd "$dirname"
+            if zip -r "../build/${dirname}.zip" .; then
+              echo "✓ Successfully zipped $dirname"
+            else
+              echo "✗ Failed to zip $dirname, skipping..."
+            fi
+            cd ..
+          else
+            echo "Directory $dirname not found, skipping..."
+          fi
         done
 
-    - name: Upload all lab zips
-      uses: actions/upload-artifact@v4
-      with:
-        name: labs-zip-files
-        path: build/
+    - name: Commit and push build folder
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add build/
+        git commit -m "Add packaged lab zip files [skip ci]" || echo "No changes to commit"
+        git push
