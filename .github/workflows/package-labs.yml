@@ -25,18 +25,40 @@ jobs:
           if git rev-parse HEAD~1 >/dev/null 2>&1; then
             # For push events with previous commits, get changed directories from the commit
             CHANGED_DIRS=$(git diff --name-only HEAD~1 | xargs -n1 dirname | sort | uniq | grep -v "^\.$" | grep -v "^\.\." | grep -v "^build$" | grep -v "^\.github$")
+            # Also detect directories that were deleted in the last commit so we can remove their zip files
+            DELETED_DIRS=$(git diff --name-only HEAD~1 --diff-filter=D | xargs -n1 dirname | sort | uniq | grep -v "^\.$" | grep -v "^\.\." | grep -v "^build$" | grep -v "^\.github$")
           else
             # First commit or shallow clone, package all labs
             echo "No previous commit found, packaging all labs..."
             CHANGED_DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github" | xargs -n1 basename)
+            DELETED_DIRS=""
           fi
         else
           # For manual triggers, package all labs
           CHANGED_DIRS=$(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github" | xargs -n1 basename)
+          DELETED_DIRS=""
         fi
-        
+
         echo "Changed directories to package: $CHANGED_DIRS"
-        
+
+        # Remove zip files for directories deleted in the last commit (if any)
+        if [ -n "$DELETED_DIRS" ]; then
+          echo "Directories deleted in last commit: $DELETED_DIRS"
+          for d in $DELETED_DIRS; do
+            # skip '.' or '..' or other invalid names
+            if [ "$d" = "." ] || [ "$d" = ".." ]; then
+              continue
+            fi
+            ZIPFILE="build/${d}.zip"
+            if [ -f "$ZIPFILE" ]; then
+              echo "Removing zip for deleted dir: $ZIPFILE"
+              rm "$ZIPFILE"
+            else
+              echo "No zip to remove for deleted dir: $d"
+            fi
+          done
+        fi
+
         for dirname in $CHANGED_DIRS; do
           if [ -d "$dirname" ]; then
             echo "Zipping $dirname..."
