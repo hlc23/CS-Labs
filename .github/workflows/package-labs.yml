@@ -14,24 +14,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Zip CSRF Demo
-      run: |
-        cd csrf-demo
-        zip -r ../csrf-demo.zip .
+    - name: Create build directory
+      run: mkdir -p build
 
-    - name: Zip SSRF DNS Rebind
+    - name: Package all labs
       run: |
-        cd ssrf-dns-rebind
-        zip -r ../ssrf-dns-rebind.zip .
+        # Find all directories except build and .github, then zip each one
+        for dir in $(find . -maxdepth 1 -type d -not -name "." -not -name ".." -not -name "build" -not -name ".github"); do
+          dirname=$(basename "$dir")
+          echo "Zipping $dirname..."
+          cd "$dir"
+          zip -r "../build/${dirname}.zip" .
+          cd ..
+        done
 
-    - name: Upload CSRF Demo Zip
+    - name: Upload all lab zips
       uses: actions/upload-artifact@v4
       with:
-        name: csrf-demo
-        path: csrf-demo.zip
-
-    - name: Upload SSRF DNS Rebind Zip
-      uses: actions/upload-artifact@v4
-      with:
-        name: ssrf-dns-rebind
-        path: ssrf-dns-rebind.zip
+        name: labs-zip-files
+        path: build/
