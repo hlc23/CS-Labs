@@ -1,0 +1,37 @@
+name: Package Labs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  package-labs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Zip CSRF Demo
+      run: |
+        cd csrf-demo
+        zip -r ../csrf-demo.zip .
+
+    - name: Zip SSRF DNS Rebind
+      run: |
+        cd ssrf-dns-rebind
+        zip -r ../ssrf-dns-rebind.zip .
+
+    - name: Upload CSRF Demo Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: csrf-demo
+        path: csrf-demo.zip
+
+    - name: Upload SSRF DNS Rebind Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: ssrf-dns-rebind
+        path: ssrf-dns-rebind.zip

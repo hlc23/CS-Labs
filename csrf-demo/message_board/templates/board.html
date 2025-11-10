@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Board</title>
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    <h2>Messages</h2>
+    <ul>
+    {% for msg in messages %}
+        <li>{{ msg }}</li>
+    {% endfor %}
+    </ul>
+    <h3>Post a Message</h3>
+    <form method="post" action="/post">
+        Message: <input name="message" required><br>
+        <input type="submit" value="Post">
+    </form>
+    <h3>Account</h3>
+    <form method="post" action="/delete_account">
+        <input type="submit" value="Delete Account" onclick="return confirm('Are you sure?')">
+    </form>
+    <p><a href="/logout">Logout</a></p>
+</body>
+</html>

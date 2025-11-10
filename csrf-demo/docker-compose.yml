@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  message_board:
+    build: ./message_board
+    ports:
+      - "5000:5000"
+    networks:
+      - csrf_net
+  attacker:
+    build: ./attacker
+    ports:
+      - "5001:5001"
+    depends_on:
+      - message_board
+    networks:
+      - csrf_net
+
+networks:
+  csrf_net:
