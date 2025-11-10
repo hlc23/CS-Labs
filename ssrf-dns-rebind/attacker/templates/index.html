@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSRF Lab - Victim Fetch</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { margin-bottom: 20px; }
+        input[type="text"] { width: 300px; padding: 8px; }
+        button { padding: 8px 16px; }
+        #result { margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>SSRF Lab - Interact with Victim Server</h1>
+    <p>Use this form to send a URL to the victim's /fetch endpoint.</p>
+    <form id="fetchForm">
+        <label for="url">URL to fetch:</label><br>
+        <input type="text" id="url" name="url" placeholder="http://example.com" required><br><br>
+        <button type="submit">Fetch</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('fetchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const url = document.getElementById('url').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Fetching...';
+
+            try {
+                const response = await fetch(`http://localhost:5000/fetch?url=${encodeURIComponent(url)}`);
+                const text = await response.text();
+                resultDiv.textContent = `Status: ${response.status}\n\n${text}`;
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
