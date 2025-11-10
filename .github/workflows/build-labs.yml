@@ -1,0 +1,151 @@
+name: Build Lab Packages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for comparison
+    
+    - name: Create build directory
+      run: mkdir -p build
+    
+    - name: Download existing build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: lab-packages
+        path: build
+      continue-on-error: true  # Don't fail if no previous artifacts exist
+    
+    - name: Detect changes and build labs
+      run: |
+        echo "Detecting lab changes..."
+        
+        # Get list of changed files (excluding .git)
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -v "^.git")
+        else
+          # For push events, compare with previous commit
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -v "^.git")
+          else
+            # First commit - treat all as changed
+            CHANGED_FILES=$(git ls-files | grep -v "^.git")
+          fi
+        fi
+        
+        echo "Changed files:"
+        echo "$CHANGED_FILES"
+        
+        # Extract unique lab directories from changed files
+        CHANGED_LABS=$(echo "$CHANGED_FILES" | grep -E "^[^/]+/$" -o | sort -u | sed 's/\/$//' || true)
+        
+        # Also check for files in subdirectories
+        CHANGED_LABS_FROM_FILES=$(echo "$CHANGED_FILES" | grep "/" | cut -d'/' -f1 | sort -u || true)
+        
+        # Combine and deduplicate
+        ALL_CHANGED_LABS=$(echo -e "$CHANGED_LABS\n$CHANGED_LABS_FROM_FILES" | sort -u | grep -v "^$" || true)
+        
+        echo "Changed labs detected:"
+        echo "$ALL_CHANGED_LABS"
+        
+        # Get all current lab directories (exclude special directories)
+        CURRENT_LABS=$(find . -maxdepth 1 -type d ! -name "." ! -name ".git" ! -name ".github" ! -name ".venv" ! -name "build" ! -name "node_modules" -exec basename {} \; | sort)
+        
+        echo "Current labs in repository:"
+        echo "$CURRENT_LABS"
+        
+        # Check for empty or deleted labs
+        for lab in $CURRENT_LABS; do
+          if [ -d "$lab" ]; then
+            # Check if directory is empty or only contains hidden files
+            FILE_COUNT=$(find "$lab" -not -path '*/\.*' -type f | wc -l)
+            if [ "$FILE_COUNT" -eq 0 ]; then
+              echo "Lab '$lab' is empty, marking for deletion"
+              if [ -f "build/${lab}.zip" ]; then
+                echo "Removing build/${lab}.zip"
+                rm "build/${lab}.zip"
+              fi
+            fi
+          fi
+        done
+        
+        # Check for deleted labs (zips without corresponding directories)
+        if [ -d "build" ]; then
+          for zip_file in build/*.zip; do
+            if [ -f "$zip_file" ]; then
+              lab_name=$(basename "$zip_file" .zip)
+              if [ ! -d "$lab_name" ] || [ -z "$(find "$lab_name" -not -path '*/\.*' -type f)" ]; then
+                echo "Lab '$lab_name' no longer exists or is empty, removing $zip_file"
+                rm "$zip_file"
+              fi
+            fi
+          done
+        fi
+        
+        # Build/update zips for changed labs
+        if [ -n "$ALL_CHANGED_LABS" ]; then
+          for lab in $ALL_CHANGED_LABS; do
+            # Skip special directories
+            if [[ "$lab" == ".git" || "$lab" == ".github" || "$lab" == ".venv" || "$lab" == "build" || "$lab" == "node_modules" ]]; then
+              continue
+            fi
+            
+            # Check if lab directory exists and is not empty
+            if [ -d "$lab" ]; then
+              FILE_COUNT=$(find "$lab" -not -path '*/\.*' -type f | wc -l)
+              if [ "$FILE_COUNT" -gt 0 ]; then
+                echo "Building zip for lab: $lab"
+                # Create zip excluding hidden files and __pycache__
+                zip -r "build/${lab}.zip" "$lab" -x "*.git*" "*__pycache__*" "*.pyc" "*/.venv/*" "*/node_modules/*"
+                echo "Created build/${lab}.zip"
+              else
+                echo "Skipping empty lab: $lab"
+              fi
+            else
+              echo "Lab directory '$lab' not found, skipping"
+            fi
+          done
+        else
+          echo "No labs were changed"
+        fi
+        
+        # List final build contents
+        echo "Final build directory contents:"
+        ls -lh build/ || echo "Build directory is empty"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: lab-packages
+        path: build/
+        retention-days: 90
+        if-no-files-found: ignore
+    
+    - name: Commit build folder to repository
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # Add build folder
+        git add build/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Auto-build: Update lab packages [skip ci]"
+          git push
+        fi
