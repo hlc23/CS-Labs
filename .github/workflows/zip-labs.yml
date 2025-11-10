@@ -1,0 +1,171 @@
+name: Zip updated labs
+
+permissions:
+  contents: write
+
+on:
+  push:
+    # run on every push; we filter changed paths inside the job and ignore .git there
+    branches:
+      - '**'
+
+jobs:
+  zip-labs:
+    name: Zip changed labs and clean removed zips
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install zip utility
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y zip
+
+      - name: Get changed files between commits
+        id: changes
+        run: |
+          set -e
+          BEFORE='${{ github.event.before }}'
+          AFTER='${{ github.sha }}'
+          echo "BEFORE=$BEFORE"
+          echo "AFTER=$AFTER"
+          # If this is the first commit (before is 000..0) use git diff-tree to list files in the commit
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED=$(git diff-tree --no-commit-id --name-status -r "$AFTER" || true)
+          else
+            CHANGED=$(git diff --name-status "$BEFORE" "$AFTER" || true)
+          fi
+          echo "changed<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Prepare lists of labs to zip and delete
+        id: prepare
+        run: |
+          set -e
+          mkdir -p build
+          changed="${{ steps.changes.outputs.changed }}"
+          echo "Raw changed list:" >&2
+          echo "$changed" >&2
+
+          # Collect labs to update and to delete
+          declare -a to_zip
+          declare -a to_del
+
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            status=$(echo "$line" | awk '{print $1}')
+            path=$(echo "$line" | awk '{print $2}')
+            # ignore any .git path changes explicitly
+            case "$path" in
+              .git*|*/.git/*)
+                echo "Ignoring .git path: $path"
+                continue
+                ;;
+            esac
+
+            # Determine top-level folder (lab)
+            lab=$(echo "$path" | cut -d'/' -f1)
+
+            # ignore top-level files and folders that are not labs
+            case "$lab" in
+              ''|."|build|.github|LICENSE|README.md)
+                continue
+                ;;
+            esac
+
+            if [ "$status" = "D" ]; then
+              to_del+=("$lab")
+            else
+              to_zip+=("$lab")
+            fi
+          done <<< "$changed"
+
+          # deduplicate
+          uniq_zip=$(printf "%s\n" "${to_zip[@]}" | sort -u | tr '\n' ' ')
+          uniq_del=$(printf "%s\n" "${to_del[@]}" | sort -u | tr '\n' ' ')
+
+          echo "zips<<EOF" >> $GITHUB_OUTPUT
+          echo "$uniq_zip" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "dels<<EOF" >> $GITHUB_OUTPUT
+          echo "$uniq_del" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Delete removed lab zips
+        if: steps.prepare.outputs.dels != ''
+        run: |
+          set -e
+          echo "Labs to delete: '${{ steps.prepare.outputs.dels }}'"
+          for lab in ${{ steps.prepare.outputs.dels }}; do
+            zipfile="build/${lab}.zip"
+            if [ -f "$zipfile" ]; then
+              rm -f "$zipfile"
+              echo "Deleted $zipfile"
+            else
+              echo "No zip found for $lab at $zipfile"
+            fi
+          done
+
+      - name: Zip updated labs
+        if: steps.prepare.outputs.zips != ''
+        run: |
+          set -e
+          echo "Labs to zip: '${{ steps.prepare.outputs.zips }}'"
+          for lab in ${{ steps.prepare.outputs.zips }}; do
+            # Only zip if directory exists (skip deleted/moved ones)
+            if [ -d "$lab" ]; then
+              # Check for any content excluding .git
+              if find "$lab" -mindepth 1 -not -path "*/.git/*" -print -quit | grep -q .; then
+                echo "Creating build/${lab}.zip"
+                # Exclude any .git directories inside the lab
+                zip -r "build/${lab}.zip" "$lab" -x "*/.git/*" >/dev/null
+                echo "Zipped $lab -> build/${lab}.zip"
+              else
+                echo "Directory $lab is empty (no files except .git); removing existing zip if any"
+                rm -f "build/${lab}.zip" || true
+              fi
+            else
+              echo "Directory $lab does not exist in workspace; skipping zipping."
+            fi
+          done
+
+      - name: Commit and push build zips
+        # run only when there may be changes (zips updated or deletions)
+        if: steps.prepare.outputs.zips != '' || steps.prepare.outputs.dels != ''
+        env:
+          GIT_BRANCH: ${{ github.ref }}
+        run: |
+          set -e
+          # configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage all build changes (new zips, removed zips)
+          git add -A build || true
+
+          # Only commit/push if there are staged changes
+          if git diff --cached --quiet; then
+            echo "No changes in build/ to commit"
+          else
+            git commit -m "chore(ci): update lab zips [skip ci]"
+            # Push back to the same ref (branch) that triggered the workflow
+            # github.ref can be refs/heads/<branch> or refs/pull/...; push to HEAD's branch name
+            refname="${GIT_BRANCH#refs/heads/}"
+            if [ -z "$refname" ]; then
+              # fallback: push to default remote HEAD
+              git push origin HEAD
+            else
+              git push origin HEAD:refs/heads/$refname
+            fi
+            echo "Pushed build zips back to repository"
+          fi
+
+      - name: List build folder
+        run: |
+          echo 'Contents of build/:'
+          ls -la build || true
