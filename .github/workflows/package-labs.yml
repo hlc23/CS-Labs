@@ -63,7 +63,8 @@ jobs:
           if [ -d "$dirname" ]; then
             echo "Zipping $dirname..."
             cd "$dirname"
-            if zip -r "../build/${dirname}.zip" .; then
+            # exclude .git so git metadata isn't included in the lab zip
+            if zip -r "../build/${dirname}.zip" . -x ".git/*" ".git" "*/.git/*"; then
               echo "✓ Successfully zipped $dirname"
             else
               echo "✗ Failed to zip $dirname, skipping..."
