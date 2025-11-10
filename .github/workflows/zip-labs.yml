@@ -55,38 +55,46 @@ jobs:
           declare -a to_zip
           declare -a to_del
 
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            status=$(echo "$line" | awk '{print $1}')
-            path=$(echo "$line" | awk '{print $2}')
-            # ignore any .git path changes explicitly
-            case "$path" in
-              .git*|*/.git/*)
-                echo "Ignoring .git path: $path"
-                continue
-                ;;
-            esac
+          if [ -n "$changed" ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              status=$(echo "$line" | awk '{print $1}')
+              path=$(echo "$line" | awk '{print $2}')
+              # ignore any .git path changes explicitly
+              case "$path" in
+                .git*|*/.git/*)
+                  echo "Ignoring .git path: $path"
+                  continue
+                  ;;
+              esac
 
-            # Determine top-level folder (lab)
-            lab=$(echo "$path" | cut -d'/' -f1)
+              # Determine top-level folder (lab)
+              lab=$(echo "$path" | cut -d'/' -f1)
 
-            # ignore top-level files and folders that are not labs
-            case "$lab" in
-              ''|."|build|.github|LICENSE|README.md)
-                continue
-                ;;
-            esac
+              # ignore top-level files and folders that are not labs
+              case "$lab" in
+                ''|."|build|.github|LICENSE|README.md)
+                  continue
+                  ;;
+              esac
 
-            if [ "$status" = "D" ]; then
-              to_del+=("$lab")
-            else
-              to_zip+=("$lab")
-            fi
-          done <<< "$changed"
+              if [ "$status" = "D" ]; then
+                to_del+=("$lab")
+              else
+                to_zip+=("$lab")
+              fi
+            done <<< "$changed"
+          fi
 
           # deduplicate
-          uniq_zip=$(printf "%s\n" "${to_zip[@]}" | sort -u | tr '\n' ' ')
-          uniq_del=$(printf "%s\n" "${to_del[@]}" | sort -u | tr '\n' ' ')
+          uniq_zip=""
+          uniq_del=""
+          if [ ${#to_zip[@]} -gt 0 ]; then
+            uniq_zip=$(printf "%s\n" "${to_zip[@]}" | sort -u | tr '\n' ' ')
+          fi
+          if [ ${#to_del[@]} -gt 0 ]; then
+            uniq_del=$(printf "%s\n" "${to_del[@]}" | sort -u | tr '\n' ' ')
+          fi
 
           echo "zips<<EOF" >> $GITHUB_OUTPUT
           echo "$uniq_zip" >> $GITHUB_OUTPUT
