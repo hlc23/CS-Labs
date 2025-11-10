@@ -61,6 +61,20 @@ jobs:
 
         for dirname in $CHANGED_DIRS; do
           if [ -d "$dirname" ]; then
+            # Treat an empty directory (no tracked/real files) as removed.
+            # Exclude .git contents from the emptiness check.
+            if [ -z "$(find "$dirname" -mindepth 1 -not -path '*/.git/*' -print -quit)" ]; then
+              echo "Directory $dirname is empty — treating as removed"
+              ZIPFILE="build/${dirname}.zip"
+              if [ -f "$ZIPFILE" ]; then
+                echo "Removing zip for empty dir: $ZIPFILE"
+                rm "$ZIPFILE"
+              else
+                echo "No zip to remove for empty dir: $dirname"
+              fi
+              continue
+            fi
+
             echo "Zipping $dirname..."
             cd "$dirname"
             # exclude .git so git metadata isn't included in the lab zip
