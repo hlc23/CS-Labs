@@ -1,0 +1,144 @@
+name: Package Labs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build lab archives
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Identify lab changes
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_dir="build"
+          mkdir -p "$build_dir"
+
+          mapfile -t labs < <(find . -mindepth 1 -maxdepth 1 -type d ! -name ".git" ! -name ".github" ! -name "$build_dir" -printf "%f\n")
+
+          if [ ${#labs[@]} -eq 0 ]; then
+            echo "No lab directories detected."
+            {
+              echo "changed="
+              echo "deleted="
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          declare -A labs_map=()
+          for lab in "${labs[@]}"; do
+            labs_map["$lab"]=1
+          done
+
+          base="${{ github.event.before }}"
+          head="${{ github.sha }}"
+
+          changed_dirs=()
+          deleted_dirs=()
+
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            changed_dirs=("${labs[@]}")
+          else
+            while IFS= read -r dir; do
+              [ -z "$dir" ] && continue
+              if [[ -n "${labs_map[$dir]:-}" ]]; then
+                changed_dirs+=("$dir")
+              fi
+            done < <(
+              git diff --name-only --diff-filter=ACMR "$base" "$head" \
+                | awk -F/ 'NF>1 {print $1}' \
+                | sort -u
+            )
+
+            while IFS= read -r dir; do
+              [ -z "$dir" ] && continue
+              if [[ "$dir" == ".git" || "$dir" == ".github" || "$dir" == "$build_dir" ]]; then
+                continue
+              fi
+              if [[ -d "$dir" ]]; then
+                continue
+              fi
+              deleted_dirs+=("$dir")
+            done < <(
+              git diff --name-only --diff-filter=D "$base" "$head" \
+                | awk -F/ 'NF>1 {print $1}' \
+                | sort -u
+            )
+          fi
+
+          if [ ${#changed_dirs[@]} -gt 0 ]; then
+            printf 'Labs to package: %s\n' "${changed_dirs[*]}"
+            printf 'changed=%s\n' "$(IFS=,; echo "${changed_dirs[*]}")" >> "$GITHUB_OUTPUT"
+          else
+            echo "No labs require packaging."
+            echo "changed=" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ ${#deleted_dirs[@]} -gt 0 ]; then
+            printf 'Labs to remove: %s\n' "${deleted_dirs[*]}"
+            printf 'deleted=%s\n' "$(IFS=,; echo "${deleted_dirs[*]}")" >> "$GITHUB_OUTPUT"
+          else
+            echo "No labs marked for removal."
+            echo "deleted=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Remove zips for deleted labs
+        if: steps.changes.outputs.deleted != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          IFS=',' read -ra labs <<< "${{ steps.changes.outputs.deleted }}"
+          for lab in "${labs[@]}"; do
+            lab="$(echo "$lab" | xargs)"
+            [ -z "$lab" ] && continue
+            zip_path="build/${lab}.zip"
+            if [ -f "$zip_path" ]; then
+              echo "Removing archive for deleted lab $lab"
+              rm -f "$zip_path"
+            fi
+          done
+
+      - name: Zip updated labs
+        if: steps.changes.outputs.changed != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          IFS=',' read -ra labs <<< "${{ steps.changes.outputs.changed }}"
+          for lab in "${labs[@]}"; do
+            lab="$(echo "$lab" | xargs)"
+            [ -z "$lab" ] && continue
+            zip_path="build/${lab}.zip"
+            echo "Packaging $lab into $zip_path"
+            rm -f "$zip_path"
+            zip -r "$zip_path" "$lab" -x "${lab}/.git/*"
+          done
+
+      - name: Commit build updates
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git status --porcelain build | grep -q .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add build
+            git commit -m "chore: update lab archives"
+            git push
+          else
+            echo "No build changes to commit."
