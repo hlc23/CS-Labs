@@ -142,3 +142,4 @@ jobs:
             git push
           else
             echo "No build changes to commit."
+          fi
