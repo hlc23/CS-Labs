@@ -1,2 +1,23 @@
 # CS-Labs
-My labs for cyber security
+My labs for cyber security.  
+For educational purposes only.
+
+## Requirements  
+- docker-compose
+
+## How to Use  
+### Cloning the Repository  
+```bash
+git clone https://github.com/hlc23/CS-Labs.git
+cd CS-Labs
+cd XXX # replace XXX with the lab you want to run
+docker-compose up -d # run the lab
+```
+### Download individual lab  
+Download from `build` folder  
+Unzip the file and run `docker-compose up -d` inside the unzipped folder.
+
+## Lab List
+- [csrf-demo](https://github.com/hlc23/CS-Labs/tree/main/csrf-demo): A demo of CSRF.
+- [SSRF-DNS-rebind](https://github.com/hlc23/CS-Labs/tree/main/ssrf-dns-rebind): Bypass SSRF protection using DNS Rebinding.
+
