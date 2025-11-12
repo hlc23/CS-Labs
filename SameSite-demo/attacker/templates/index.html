@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Attacker - SameSite Demo</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+      code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Attacker - SameSite Demo</h1>
+    <p>Victim: <strong><a href="{{ victim }}" target="_blank">{{ victim }}</a></strong></p>
+
+    <div class="card">
+      <h3>1) Auto POST (top-level navigation via form.submit)</h3>
+      <p>Submits a cross-site <code>POST</code> form to <code>{{ victim }}/transfer</code>. Cookies are sent only if SameSite=None (with HTTPS) — blocked for Lax/Strict.</p>
+      <form id="postForm" action="{{ victim }}/transfer" method="POST" target="_blank">
+        <input type="hidden" name="amount" value="1000" />
+      </form>
+      <button onclick="document.getElementById('postForm').submit()">Launch POST attack</button>
+    </div>
+
+    <div class="card">
+      <h3>2) Auto GET (top-level navigation via form.submit)</h3>
+      <p>Submits a cross-site <code>GET</code> form to <code>{{ victim }}/transfer</code>. Cookies are sent for Lax/None, but blocked for Strict.</p>
+      <form id="getForm" action="{{ victim }}/transfer" method="GET" target="_blank">
+        <input type="hidden" name="q" value="test" />
+      </form>
+      <button onclick="document.getElementById('getForm').submit()">Launch GET navigation</button>
+    </div>
+
+    <div class="card">
+      <h3>3) Subresource IMG load</h3>
+      <p>Loads <code>{{ victim }}/pixel</code> as an image. Cookies are sent only if SameSite=None (with HTTPS). Lax and Strict block cookies in subresource requests.</p>
+      <button id="imgBtn">Load pixel</button>
+      <p id="imgResult">Status: Not tested</p>
+      <script>
+        document.getElementById('imgBtn').addEventListener('click', function() {
+          const img = new Image();
+          img.onload = function() {
+            document.getElementById('imgResult').textContent = 'Status: Cookie SENT (image loaded)';
+          };
+          img.onerror = function() {
+            document.getElementById('imgResult').textContent = 'Status: Cookie BLOCKED (image failed)';
+          };
+          img.src = '{{ victim }}/pixel?ts=' + Date.now();
+        });
+      </script>
+    </div>
+
+    <p>Tip: Start on the victim site, log in, then switch SameSite modes and try each attack.</p>
+  </body>
+</html>

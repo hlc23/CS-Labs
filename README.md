@@ -20,4 +20,5 @@ Unzip the file and run `docker-compose up -d` inside the unzipped folder.
 ## Lab List
 - [csrf-demo](https://github.com/hlc23/CS-Labs/tree/main/csrf-demo): A demo of CSRF.
 - [SSRF-DNS-rebind](https://github.com/hlc23/CS-Labs/tree/main/ssrf-dns-rebind): Bypass SSRF protection using DNS Rebinding.
+- [samesite-demo](https://github.com/hlc23/CS-Labs/tree/main/samesite-demo): Show differences of SameSite cookie settings (Lax, Strict, None).
 

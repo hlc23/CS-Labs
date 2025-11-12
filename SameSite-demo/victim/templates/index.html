@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Victim - SameSite Demo</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .modes a { margin-right: 0.5rem; }
+      code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Victim - SameSite Demo</h1>
+    <p>Current cookie setting: <strong>SameSite=<code>{{ mode }}</code></strong>{% if mode == 'None' %} (Secure required; use HTTPS){% endif %}</p>
+
+    <div class="modes">
+      <strong>Switch mode:</strong>
+      <a href="{{ url_for('set_mode', mode='lax') }}">Lax</a>
+      <a href="{{ url_for('set_mode', mode='strict') }}">Strict</a>
+      <a href="{{ url_for('set_mode', mode='none') }}">None</a>
+    </div>
+
+    <hr/>
+    <h2>Session</h2>
+    {% if authed %}
+      <p>Status: ✅ Logged in (cookie present)</p>
+      <form action="{{ url_for('logout') }}" method="post">
+        <button type="submit">Logout (clear cookie)</button>
+      </form>
+    {% else %}
+      <p>Status: ❌ Not logged in</p>
+      <form action="{{ url_for('login') }}" method="post">
+        <button type="submit">Login (set cookie)</button>
+      </form>
+    {% endif %}
+
+    <hr/>
+    <h2>Protected action</h2>
+    <p>Manual test: visit <a href="{{ url_for('transfer') }}" target="_blank">/transfer</a> (GET). If cookie is sent, you should see success.</p>
+
+    <p>Open the attacker site to try cross-site requests:</p>
+    <ul>
+      <li><a href="http://localhost:6001/" target="_blank">http://localhost:6001/</a></li>
+    </ul>
+  </body>
+</html>

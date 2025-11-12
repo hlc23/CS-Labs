@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  victim:
+    build: ./victim
+    ports:
+      - "6080:5000"
+    networks:
+      - samesite_net
+  attacker:
+    build: ./attacker
+    ports:
+      - "6001:5001"
+    depends_on:
+      - victim
+    networks:
+      - samesite_net
+
+networks:
+  samesite_net:
