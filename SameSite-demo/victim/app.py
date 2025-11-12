@@ -1,7 +1,11 @@
+import os
 from flask import Flask, request, make_response, render_template, redirect, url_for
 from datetime import timedelta
 
 app = Flask(__name__)
+
+# Attacker base URL for convenience link on index page
+ATTACKER_BASE_URL = os.getenv("ATTACKER_BASE_URL", "http://localhost:6001")
 
 # In-memory state for demo purposes
 STATE = {
@@ -23,7 +27,7 @@ def get_cookie_settings():
 def index():
     mode = STATE["mode"]
     authed = (request.cookies.get(COOKIE_NAME) == "valid")
-    return render_template("index.html", mode=mode, authed=authed)
+    return render_template("index.html", mode=mode, authed=authed, attacker_base=ATTACKER_BASE_URL)
 
 
 @app.route("/set_mode/<mode>")

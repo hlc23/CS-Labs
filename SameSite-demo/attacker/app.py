@@ -4,7 +4,7 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 # Victim base URL (can be overridden via env VICTIM_BASE_URL)
-VICTIM = "http://localhost:6080"
+VICTIM = os.getenv("VICTIM_BASE_URL", "http://localhost:6080")
 
 
 @app.route("/")

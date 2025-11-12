@@ -5,12 +5,18 @@ services:
     build: ./victim
     ports:
       - "6080:5000"
+    environment:
+      # Use sslip.io for victim to ensure different eTLD+1 from nip.io (cross-site)
+      - ATTACKER_BASE_URL=http://attacker.127.0.0.1.nip.io:6001
     networks:
       - samesite_net
   attacker:
     build: ./attacker
     ports:
       - "6001:5001"
+    environment:
+      # Point attacker to victim using sslip.io so the two sites are cross-site (nip.io vs sslip.io)
+      - VICTIM_BASE_URL=http://victim.127.0.0.1.sslip.io:6080
     depends_on:
       - victim
     networks:

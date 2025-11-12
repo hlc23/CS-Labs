@@ -20,14 +20,19 @@
 docker-compose up --build
 ```
 
-3. 開啟：
-  - Victim: http://127.0.0.1:6080
-   - Attacker: http://localhost:6001
+3. 開啟（HTTP 預設）：
+  - Victim: http://victim.127.0.0.1.sslip.io:6080
+  - Attacker: http://attacker.127.0.0.1.nip.io:6001
 
 ### Important !
-使用 127.0.0.1 及 localhost 分別存取 Victim 與 Attacker，以確保為跨站請求。  
-或是自行修改 hosts 檔案，將兩站設定為不同網域名稱。  
-或是使用 wildcard domain 服務（如 nip.io、sslip.io）。
+為了「跨站」(cross-site) 成立，兩站必須是不同「註冊型網域（eTLD+1）」。
+
+僅用 nip.io 的兩個子網域（例如 `victim.127.0.0.1.nip.io` 與 `attacker.127.0.0.1.nip.io`）在多數瀏覽器會被視為同一個 site，無法達到跨站。
+
+建議做法：
+- 混用兩個 wildcard DNS 服務：一個用 nip.io、另一個用 sslip.io（本專案 docker-compose 已預設這樣做）。
+- 或使用 `127.0.0.1` 與 `localhost` 各自存取兩站；
+- 或自行在 hosts 設定兩個完全不同的網域名稱。
 
 ## 操作步驟
 
@@ -56,9 +61,13 @@ docker-compose up --build
 - 兩站需屬不同「site」（不同註冊型網域）。
 
 簡化選項：
-- 使用自簽憑證反向代理（例如 Nginx/Trafik）或在瀏覽器信任自簽根憑證；
+- 使用自簽憑證反向代理（例如 Nginx/Traefik）或在瀏覽器信任自簽根憑證；
 - 建立 hosts 對應（例如將 `victim.lab`、`attacker.lab` 指到 127.0.0.1），確保為跨站；
 - 將 Victim 以 HTTPS 服務，Victim 在選擇 `None` 時已自動以 `Secure` 設定 Cookie。
+
+提示：若想在本地用 nip.io/sslip.io 加上 HTTPS，可考慮安裝 mkcert 產生對應 FQDN 的憑證，或在容器前使用反向代理處理 TLS（需將瀏覽器信任根憑證）。
+
+目前預設仍為 HTTP，足以觀察 Lax/Strict；要觀察 None，請依上方方式加上 HTTPS。
 
 本示範已在程式中於 `mode=None` 時將 Cookie 的 `secure=True`，其餘模式為 `secure=False`。若要真的驗證 None，請自行加上 HTTPS 端點或反向代理。
 
