@@ -1,5 +1,7 @@
 # SameSite Cookie 示範
 
+Zip Download: [SameSite-cookie.zip](https://github.com/hlc23/CS-Labs/raw/refs/heads/main/build/SameSite-cookie.zip)
+
 這個實驗示範 SameSite Cookie 不同設定（Lax、Strict、None）對跨站請求是否會自動夾帶 Cookie 的影響。
 
 組成：
