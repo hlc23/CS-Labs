@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  attacker:
+    build: ./attacker
+    ports:
+      - "8081:5001"
+    networks:
+      - json-csrf-net
+
+  victim:
+    build: ./victim
+    ports:
+      - "8080:8080"
+    networks:
+      - json-csrf-net
+
+networks:
+  json-csrf-net:
+    driver: bridge
