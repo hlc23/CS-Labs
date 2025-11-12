@@ -18,6 +18,6 @@ Download from `build` folder
 Unzip the file and run `docker-compose up -d` inside the unzipped folder.
 
 ## Lab List
-- [csrf-demo](https://github.com/hlc23/CS-Labs/tree/main/csrf-demo): A demo of CSRF.
-- [SameSite-cookie](https://github.com/hlc23/CS-Labs/tree/main/SameSite-cookie): Show differences of SameSite cookie settings (Lax, Strict, None).
+- [csrf-demo](./CSRF-demo/): A demo of CSRF.
+- [SameSite-cookie](./SameSite-cookie/): Show differences of SameSite cookie settings (Lax, Strict, None).
 

@@ -1,6 +1,6 @@
 # CSRF 示範
 
-Zip Download: [csrf-demo.zip](https://github.com/hlc23/CS-Labs/raw/refs/heads/main/build/csrf-demo.zip)
+Zip Download: [csrf-demo.zip](../build/csrf-demo.zip)
 
 這是一個使用 Python 和 Docker 的簡單跨站請求偽造 (CSRF) 攻擊示範。
 
