@@ -1,6 +1,0 @@
-建立一個 Lab 
-此 Lab 需要有以下內容
-- vuln server: 一個有 CSRF 漏洞的帳號平台
-- hacker server : 用於練習建構 CSRF expolit. 需能控制機器人去存取 CSRF 的攻擊頁面
-- bot : 模擬受害者在登入的狀況下 觸發 CSRF 造成惡意行為
-將此 lab 建立在 CSRF-expolit 資料夾中
