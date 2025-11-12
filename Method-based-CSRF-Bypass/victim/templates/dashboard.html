@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>Balance: ${{ balance }}</p>
+    <h2>Transfer Money</h2>
+    <form action="/transfer" method="post">
+        Amount: <input name="amount"><br>
+        To Account: <input name="to_account"><br>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="submit" value="Transfer">
+    </form>
+    <a href="/logout">Logout</a>
+</body>
+</html>

