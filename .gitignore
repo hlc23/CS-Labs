@@ -1,2 +1,2 @@
 .venv
-# Note: build folder is tracked to store lab packages
+temp*
