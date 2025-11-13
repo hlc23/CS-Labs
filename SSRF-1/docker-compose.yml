@@ -1,7 +1,0 @@
-version: '3.8'
-
-services:
-  victim:
-    build: ./victim
-    ports:
-      - "8080:8080"

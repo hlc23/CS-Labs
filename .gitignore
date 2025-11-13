@@ -1,2 +1,5 @@
 .venv
-temp*
+temp.html
+temp.py
+*.pyc
+__pycache__/

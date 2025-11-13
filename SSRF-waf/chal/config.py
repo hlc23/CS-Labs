@@ -1,0 +1,3 @@
+flag1 = "FLAG{W0w_55RF_8ypA22_l0calh057}"
+flag2 = "FLAG{574ND_4774ck_FR0M_H77p81N}"
+flag3 = "FLAG{DN5_R381Nd_Ma5T3R}"

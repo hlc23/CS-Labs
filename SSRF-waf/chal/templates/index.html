@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSRF Bypass Lab</title>
+</head>
+<body>
+    <h1>SSRF Bypass Challenges</h1>
+    
+    <h2>Challenge 1: Hostname Blacklist</h2>
+    <p>Enter a URL to make a request. Hostnames localhost, 127.0.0.1, ::1 are blocked.</p>
+    <p>Try to bypass the restriction to access internal resources!</p>
+    <form action="/mkreq1" method="get">
+        <label for="url">URL:</label>
+        <input type="text" id="url1" name="url" size="50" placeholder="https://example.com">
+        <input type="submit" value="Make Request">
+    </form>
+    
+    <h2>Challenge 2: Domain Whitelist</h2>
+    <p>Enter a URL to make a request. Only hostnames starting with httpbin.dev are allowed.</p>
+    <p>Try to bypass the restriction to access internal resources!</p>
+    <form action="/mkreq2" method="get">
+        <label for="url">URL:</label>
+        <input type="text" id="url2" name="url" size="50" placeholder="https://httpbin.dev/get">
+        <input type="submit" value="Make Request">
+    </form>
+    
+    <p><a href="/?debug=1">Debug mode</a> (reveals source code)</p>
+</body>
+</html>

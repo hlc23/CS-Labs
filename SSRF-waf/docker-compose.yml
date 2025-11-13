@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  chal:
+    build: ./chal
+    ports:
+      - "80:80"
+    networks:
+      - ssrf-net
+
+networks:
+  ssrf-net:
+    driver: bridge

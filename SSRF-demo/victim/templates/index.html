@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSRF Victim</title>
+</head>
+<body>
+    <h1>URL Fetcher</h1>
+    <p>Enter a URL to fetch its content. Try: <code>http://localhost:8080/secret</code></p>
+    <form action="/fetch" method="get">
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url" size="50" placeholder="http://localhost:8080/secret">
+        <input type="submit" value="Fetch">
+    </form>
+</body>
+</html>
