@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Victim - Fetcher (SSRF)</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 40px; }
+      input[type=text] { width: 520px; padding: 8px; }
+      button { padding: 8px 12px; }
+      .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; max-width: 720px; }
+    </style>
+  </head>
+  <body>
+    <h1>Victim - URL Fetcher</h1>
+    <div class="card">
+      <form action="/fetch" method="get">
+        <label>URL: <input name="url" type="text" placeholder="http://example.com" /></label>
+        <button type="submit">Fetch</button>
+      </form>
+    </div>
+  </body>
+  </html>
