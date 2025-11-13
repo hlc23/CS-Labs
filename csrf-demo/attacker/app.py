@@ -4,6 +4,9 @@ import os
 
 app = Flask(__name__)
 
+# Get victim URL from environment
+VICTIM_URL = os.environ.get('VICTIM_BASE_URL', 'http://localhost:5000')
+
 # Directory to store uploaded payload HTML files
 UPLOAD_FOLDER = os.path.join(app.root_path, 'payloads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -15,15 +18,15 @@ def _allowed_file(filename: str) -> bool:
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', victim_url=VICTIM_URL)
 
 @app.route('/fetch-attack')
 def fetch_attack():
-    return render_template('fetch_attack.html')
+    return render_template('fetch_attack.html', victim_url=VICTIM_URL)
 
 @app.route('/form-attack')
 def form_attack():
-    return render_template('form_attack.html')
+    return render_template('form_attack.html', victim_url=VICTIM_URL)
 
 @app.route('/upload-payload', methods=['GET', 'POST'])
 def upload_payload():
