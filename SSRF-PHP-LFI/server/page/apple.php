@@ -1,0 +1,1 @@
+<img src="./page/apple.png" alt="Apple Image">
