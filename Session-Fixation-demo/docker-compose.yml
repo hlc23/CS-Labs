@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  victim:
+    build: ./victim
+    ports:
+      - "5000:5000"
+    networks:
+      - fixation_net
+  attacker:
+    build: ./attacker
+    ports:
+      - "5001:5001"
+    environment:
+      - VICTIM_URL=http://localhost:5000
+    depends_on:
+      - victim
+    networks:
+      - fixation_net
+
+networks:
+  fixation_net:

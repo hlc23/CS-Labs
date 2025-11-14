@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attacker Site</title>
+</head>
+<body>
+    <h1>Session Fixation Attack Demo</h1>
+    <p>Click this link to "login" on the victim site with a fixed session ID:</p>
+    <a href="http://localhost:5000/login?session_id=abc123">Login to Victim Site</a>
+    <p>After logging in, the attacker can access your profile by setting the session cookie to 'abc123' in the browser.</p>
+</body>
+</html>
