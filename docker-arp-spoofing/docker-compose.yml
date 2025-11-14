@@ -1,0 +1,17 @@
+version: '3.2'
+services:
+  receiver:
+    build: "./"
+    command: nc -l -p 80
+    logging:
+      driver: none
+  sender:
+    build: "./"
+    command: bash -c "while true; do echo 'secret message'; sleep 5; done | nc receiver 80"
+    depends_on:
+      - receiver
+  attacker:
+    build: "./"
+    command: tcpdump -A 'tcp'
+    container_name: "attacker"
+    tty: true
