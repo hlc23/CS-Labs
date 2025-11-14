@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search</title>
+</head>
+<body>
+    <h1>Search</h1>
+    <p>Search: {{ q|safe }}</p>
+    <form>
+        <input name="q" value="{{ q }}">
+        <input type="submit">
+    </form>
+</body>
+</html>
