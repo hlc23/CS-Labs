@@ -1,5 +1,6 @@
 .venv
 temp.html
 temp.py
+temp.txt
 *.pyc
 __pycache__/
